@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Crashing Optimizer</title>
+    
+    <!-- Google Font: Open Sans -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Frappe Gantt CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Project Crashing Optimizer</h1>
+
+        <div class="info-box">
+            <h2>About this Tool</h2>
+            <p>This tool helps project managers analyze cost and schedule trade-offs using the <strong>crashing technique</strong>. Input your project activities, their normal and crash parameters, and their dependencies. The tool will calculate the critical path and allow you to iteratively crash activities to shorten the project duration in the most cost-effective way. This approach aligns with principles from the <strong>PMBOK® Guide</strong> (Schedule Compression) and <strong>AACE International</strong> (Total Cost Management Framework).</p>
+            <p><strong>Note:</strong> This tool assumes linear cost-per-unit-time for crashing. It does not explicitly model complex resource constraints beyond cost. Always validate results with comprehensive project analysis. Ensure Normal Duration ≥ Crash Duration and Crash Cost ≥ Normal Cost for valid calculations.</p>
+        </div>
+
+        <h2>1. Input Project Activities</h2>
+        <div class="table-container"> <!-- It's good practice to have tables in a scrollable container -->
+            <table id="activityInputTable">
+                <colgroup>
+                    <col style="width: 5%;">  <!-- ID -->
+                    <col style="width: 15%;"> <!-- Activity Name -->
+                    <col style="width: 15%;"> <!-- Predecessors -->
+                    <col style="width: 9%;">  <!-- Normal Duration -->
+                    <col style="width: 9%;">  <!-- Normal Cost -->
+                    <col style="width: 9%;">  <!-- Crash Duration -->
+                    <col style="width: 9%;">  <!-- Crash Cost -->
+                    <col style="width: 9%;">  <!-- Max Crash -->
+                    <col style="width: 12%;"> <!-- Cost/Unit Crash -->
+                    <col style="width: 8%;">  <!-- Actions -->
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Activity Name</th>
+                        <th>Predecessors<br>(ID[Type+/-Lag])</th>
+                        <th>Normal Duration (units)</th>
+                        <th>Normal Cost ($)</th>
+                        <th>Crash Duration (units)</th>
+                        <th>Crash Cost ($)</th>
+                        <th>Max Crash (auto)</th>
+                        <th>Cost/Unit Crash (auto)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="activityTableBody">
+                    <!-- Activity rows will be added here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div class="table-actions">
+            <button type="button" id="addActivityBtn">Add Activity Row</button>
+            <button type="button" id="loadSampleBtn">Load Sample Data</button>
+        </div>
+
+
+        <h2>2. Control Panel</h2>
+        <div class="controls">
+            <button type="button" id="calculateInitialBtn">Calculate Initial Schedule</button>
+            <button type="button" id="crashStepBtn">Crash One Step</button>
+            <button type="button" id="resetBtn">Reset All Data</button>
+            <hr style="margin: 15px 0;"> <!-- Visual separator -->
+            <label for="loadInputFile" class="button-like-label">Load Input Data (JSON/CSV)</label>
+            <input type="file" id="loadInputFile" accept=".json,.csv" style="display: none;">
+            <button type="button" id="exportInputBtnJSON">Export Input (JSON)</button>
+            <button type="button" id="exportInputBtnCSV">Export Input (CSV)</button>
+            <button type="button" id="exportReportPDFBtn">Export Report (PDF)</button>
+        </div>
+
+        <h2>3. Project Status & Results</h2>
+        <div class="results-grid-container">
+            <div class="results-grid"></div>
+                <div>Initial Project Duration:</div><div id="initialDurationDisplay" class="output-value">N/A</div>
+                <div>Initial Project Cost:</div><div>$<span id="initialCostDisplay" class="output-value">N/A</span></div>
+                <div>Current Project Duration:</div><div id="currentDurationDisplay" class="output-value">N/A</div>
+                <div>Current Total Cost:</div><div>$<span id="currentCostDisplay" class="output-value">N/A</span></div>
+                <div>Total Crash Cost Added:</div><div>$<span id="totalCrashCostDisplay" class="output-value">0.00</span></div>
+            </div>
+            <div id="criticalPathDisplay" class="critical-path-info">...</div>
+        </div>
+        <div id="criticalPathDisplay" class="critical-path-info"><strong>Critical Path(s):</strong> N/A</div>
+
+
+        <h2>4. Activity Details & CPM Values</h2>
+        <div class="table-container">
+            <table id="activityDetailsTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Current Duration</th>
+                        <th>ES</th>
+                        <th>EF</th>
+                        <th>LS</th>
+                        <th>LF</th>
+                        <th>Slack</th>
+                        <th>Crashed Time</th>
+                        <th>Can Crash?</th>
+                        <th>Critical?</th>
+                    </tr>
+                </thead>
+                <tbody id="activityDetailsTableBody">
+                    <!-- Detailed activity status will be shown here -->
+                </tbody>
+            </table>
+        </div>
+
+        <h2>5. Crashing Log</h2>
+        <textarea id="logArea" readonly></textarea>
+
+        <h2>6. Gantt Chart</h2>
+        <div class="controls gantt-controls"> <!-- Or just class="controls" -->
+            <label for="ganttStartDate">Gantt Display Start Date:</label>
+            <input type="date" id="ganttStartDate" name="ganttStartDate">
+            <button type="button" id="redrawGanttBtn">Redraw Gantt</button>
+        </div>
+        <div class="gantt-container"> <!-- This div needs width: 100% -->
+            <svg id="ganttChartContainer"></svg> <!-- This SVG needs width: 100% -->
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- jsPDF-AutoTable plugin for better tables -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <!-- html2canvas to capture HTML elements as images -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- Your application script -->
+    <script src="js/app.js"></script> 
+</body>
+</html>
