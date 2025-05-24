@@ -828,7 +828,12 @@ document.addEventListener('DOMContentLoaded', () => {
         } 
         // ... (rest of captureReportEvent: summary, snapshot, push to reportEvents) ...
         // This part (summary, activitiesSnapshot, logEntry, reportEvents.push) remains the same
-        const currentSummary = { /* ... */ }; // Ensure this uses up-to-date global vars
+        const currentSummary = {
+            duration: typeof currentProjectDuration === 'number' ? currentProjectDuration : NaN,
+            cost: typeof currentTotalCost === 'number' ? currentTotalCost : NaN,
+            crashCost: typeof accumulatedCrashCost === 'number' ? accumulatedCrashCost : NaN,
+            criticalPath: Array.isArray(activities) ? (activities.filter(act => act.isCritical).map(act => act.id).join(', ') || 'N/A') : 'N/A'
+        }; // Ensure this uses up-to-date global vars
         let activitiesSnapshot = []; try { activitiesSnapshot = JSON.parse(JSON.stringify(activities.map(act => ({ id: act.id, name: act.name, currentDuration: act.currentDuration, normalDuration: act.normalDuration, crashDuration: act.crashDuration, ES: act.ES, EF: act.EF, LS: act.LS, LF: act.LF, slack: act.slack, crashedTime: act.crashedTime, isCritical: act.isCritical })))); } catch (e) { logMessage(`Error creating activities snapshot for "${title}": ${e.message}`, "error");}
         let logEntryForEvent = specificLogMessageForThisEvent; if (!logEntryForEvent) { const logLines = logArea.value.trim().split('\n'); logEntryForEvent = logLines.length > 0 ? logLines[logLines.length - 1] : "Log N/A for this event"; }
         
