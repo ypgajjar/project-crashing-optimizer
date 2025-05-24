@@ -71,14 +71,3 @@ This tool applies the "Crashing" technique, a schedule compression method descri
 *   **No Explicit Resource Modeling:** Does not directly account for resource availability or constraints beyond the costs provided.
 *   **Simple Predecessor Logic:** Primarily supports Finish-to-Start relationships.
 *   **Client-Side Only:** Data is not saved server-side. If you close the browser tab, input data will be lost unless you have browser features that retain form data (which is unreliable for this purpose).
-
-## To Host on GitHub Pages
-
-1.  Create a new public repository on GitHub.
-2.  Upload the `index.html` file, the `css` folder (with `style.css` inside), and the `js` folder (with `app.js` inside) to your repository.
-3.  Go to your repository's "Settings" page.
-4.  Scroll down to the "GitHub Pages" section.
-5.  Under "Source," select the branch you want to deploy from (e.g., `main` or `master`).
-6.  Choose the `/ (root)` folder.
-7.  Click "Save."
-8.  Your site should be published at `http://<your-username>.github.io/<repository-name>/`. It might take a few minutes to become available.
